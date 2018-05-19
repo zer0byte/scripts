@@ -3,7 +3,9 @@ apt-get install ufw
 ufw allow 22
 ufw enable
 apt-get install nmap
+apt-get install masscan
 apt-get install geoip-bin
+apt-get install sshuttle
 mkdir /Tools
 ls
 cd /Tools
