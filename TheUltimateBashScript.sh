@@ -6,6 +6,7 @@ apt-get install nmap
 apt-get install masscan
 apt-get install geoip-bin
 apt-get install sshuttle
+pip install webscreenshot
 mkdir /Tools
 ls
 cd /Tools
