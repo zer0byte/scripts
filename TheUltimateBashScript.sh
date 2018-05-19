@@ -2,6 +2,8 @@ apt-get update && apt-get upgrate
 apt-get install ufw
 ufw allow 22
 ufw enable
+apt-get install nmap
+apt-get install geoip-bin
 mkdir /Tools
 ls
 cd /Tools
