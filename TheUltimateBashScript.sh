@@ -1,4 +1,4 @@
-apt-get update && apt-get upgrate
+apt-get update && apt-get upgrade
 apt-get install ufw
 ufw allow 22
 ufw enable
