@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Passiverecon v1.0
+# By Zer0byte
+
 from scapy.all import *
 def arp_monitor_callback(pkt):
     if ARP in pkt and pkt[ARP].op in (1,2): #who-has or is-at
