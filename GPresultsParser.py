@@ -27,7 +27,7 @@ a, b = FileName.split("\\")
 def StartUp():
     os.system("clear")
     print "-" * 80
-    print "Group Polciy Results Parser by: Bilal Bokhari"
+    print "Group Polciy Results Parser by: Zer0byte"
     print " "
     print " "
     print "Parsing group policy results for computer name: " + b
