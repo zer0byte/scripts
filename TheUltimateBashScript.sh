@@ -10,6 +10,8 @@ cd /Tools
 wget https://git.io/vpn -O openvpn-install.sh
 git clone https://github.com/trustedsec/ptf.git
 git clone https://github.com/davidtavarez/pwndb
+apt install apt-transport-https
+apt install apt-transport-tor
 echo "deb https://ppa.launchpad.net/brightbox/ruby-ng/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/ruby.list
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C3173AA6
 apt-get install ruby2.3 ruby2.3-dev bundler -y
