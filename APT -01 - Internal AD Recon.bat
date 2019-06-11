@@ -14,4 +14,4 @@ net group “domain admins” /domain>>1.txt
 net group “domain controllers” /domain>>1.txt
 net group “exchange domain servers” /domain>>1.txt
 net group “exchange servers” /domain>>1.txt
-net group “domain computers” /domain>>”1.txt
+net group “domain computers” /domain>>1.txt
