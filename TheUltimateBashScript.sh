@@ -4,20 +4,31 @@ echo "[+] Starting Install [+]"
 echo "[+] Upgrade installed packages to latest [+]"
 apt-get update && apt-get upgrade
 apt-get autoclean
-
+echo " "
+echo " "
 echo "[+] Installing Uncomplicated Firewall [+]"
 apt-get install ufw
-
+echo " "
+echo " "
 echo "[+] Configuring Uncomplicated Firewall [+]"
 ufw allow 22
+echo " "
+echo " "
 ufw enable
-
+echo " "
+echo " "
 apt-get install nmap masscan geoip-bin sshuttle git python-pip libssl-dev libffi-dev python-dev build-essential -y
 apt-get install curl git libcurl4-openssl-dev make zlib1g-dev gawk g++ gcc libreadline6-dev libssl-dev libyaml-dev libsqlite3-dev sqlite3 auto$
 apt-get install python-requests
+echo " "
+echo " "
 mkdir Tools
 ls
+echo " "
+echo " "
 cd Tools
+echo " "
+echo " "
 wget https://git.io/vpn -O openvpn-install.sh
 git clone https://github.com/trustedsec/ptf.git
 git clone https://github.com/davidtavarez/pwndb
@@ -33,3 +44,5 @@ bundle install --without test
 alias wpscan='/root/Tools/wpscan/./wpscan.rb' 
 pip install crackmapexec
 pip install webscreenshot
+cd /Tools/pwndb
+pip install -r requirements.txt
