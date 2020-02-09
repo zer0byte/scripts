@@ -20,6 +20,7 @@ echo " "
 apt-get install nmap masscan geoip-bin sshuttle git python-pip libssl-dev libffi-dev python-dev build-essential -y
 apt-get install curl git libcurl4-openssl-dev make zlib1g-dev gawk g++ gcc libreadline6-dev libssl-dev libyaml-dev libsqlite3-dev sqlite3 auto$
 apt-get install python-requests
+apt-get install net-tools
 echo " "
 echo " "
 mkdir Tools
