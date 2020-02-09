@@ -29,6 +29,8 @@ echo " "
 cd Tools
 echo " "
 echo " "
+echo "installing dirsearch"
+git clone https://github.com/maurosoria/dirsearch.git
 wget https://git.io/vpn -O openvpn-install.sh
 git clone https://github.com/trustedsec/ptf.git
 git clone https://github.com/aboul3la/Sublist3r.git
@@ -45,5 +47,5 @@ bundle install --without test
 alias wpscan='/root/Tools/wpscan/./wpscan.rb' 
 pip install crackmapexec
 pip install webscreenshot
-cd /Tools/pwndb
+cd /root/Tools/pwndb
 pip install -r requirements.txt
