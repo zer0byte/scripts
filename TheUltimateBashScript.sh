@@ -30,11 +30,16 @@ cd Tools
 echo " "
 echo " "
 echo "installing dirsearch"
+echo " "
+echo " "
 git clone https://github.com/maurosoria/dirsearch.git
+echo " "
+echo " "
 wget https://git.io/vpn -O openvpn-install.sh
 git clone https://github.com/trustedsec/ptf.git
 git clone https://github.com/aboul3la/Sublist3r.git
 git clone https://github.com/SpiderLabs/Responder.git
+git clone https://github.com/sullo/nikto.git
 git clone https://github.com/davidtavarez/pwndb
 apt install apt-transport-https
 apt install apt-transport-tor
