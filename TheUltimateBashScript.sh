@@ -1,5 +1,4 @@
 #!/bin/bash
-
 echo "[+] Starting Install [+]"
 echo "[+] Upgrade installed packages to latest [+]"
 apt-get update && apt-get upgrade
@@ -23,7 +22,6 @@ apt-get install python-requests
 echo " "
 echo " "
 mkdir Tools
-ls
 echo " "
 echo " "
 cd Tools
@@ -94,3 +92,8 @@ echo "[+] Installing WebScreenshot [+]"
 echo " "
 echo " "
 pip install webscreenshot
+echo "[+] Installing Amass [+]"
+echo " "
+echo " "
+apt install snapd
+snap install amass
