@@ -82,6 +82,12 @@ bundle install --without test
 alias wpscan='/root/Tools/wpscan/./wpscan.rb'
 echo " "
 echo " "
+echo "[+] Installing Droopescan [+]"
+echo " "
+echo " "
+pip install droopescan
+echo " "
+echo " "
 echo "[+] Installing Crackmapexc [+]"
 echo " "
 echo " "
