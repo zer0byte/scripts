@@ -103,3 +103,10 @@ echo " "
 echo " "
 apt install snapd
 snap install amass
+echo "[+] Installing Impacket [+]"
+echo " "
+echo " "
+apt install python3-pip
+git clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket
+pip3 install -r /opt/impacket/requirements.txt
+python3 /opt/impacket/setup.py install
