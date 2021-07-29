@@ -98,11 +98,15 @@ echo "[+] Installing WebScreenshot [+]"
 echo " "
 echo " "
 pip install webscreenshot
+echo " "
+echo " "
 echo "[+] Installing Amass [+]"
 echo " "
 echo " "
 apt install snapd
 snap install amass
+echo " "
+echo " "
 echo "[+] Installing Impacket [+]"
 echo " "
 echo " "
@@ -110,3 +114,14 @@ apt install python3-pip
 git clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket
 pip3 install -r /opt/impacket/requirements.txt
 python3 /opt/impacket/setup.py install
+echo " "
+echo " "
+echo "[+] Installing Eyewitness [+]"
+echo " "
+echo " "
+cd /root/Tools
+git clone https://github.com/FortyNorthSecurity/EyeWitness.git
+cd EyeWitness/
+cd Python/
+cd setup/
+./setup.sh
