@@ -4,6 +4,7 @@
 # pip3 install pycryptodomex
 # pip3 install pypiwin32
 # Optional: pip3 install pyinstaller
+# pyinstaller main.py --onefile
 
 import os
 import json
