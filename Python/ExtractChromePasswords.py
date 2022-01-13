@@ -1,4 +1,4 @@
-#Credit: https://www.geeksforgeeks.org/how-to-extract-chrome-passwords-in-python/
+# Credit: https://www.geeksforgeeks.org/how-to-extract-chrome-passwords-in-python/
 # Important libraries:
 # pip3 install pycryptodome
 # pip3 install pycryptodomex
