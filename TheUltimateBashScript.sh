@@ -135,3 +135,4 @@ git clone https://salsa.debian.org/pkg-security-team/dirb.git
 cd dirb
 bash ./configure
 make
+
