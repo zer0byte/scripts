@@ -125,3 +125,13 @@ cd EyeWitness/
 cd Python/
 cd setup/
 ./setup.sh
+echo " "
+echo " "
+echo "[+] Installing Dirb [+]"
+echo " "
+echo " "
+cd /root/Tools
+https://salsa.debian.org/pkg-security-team/dirb.git
+cd dirb
+./configure
+make
