@@ -133,5 +133,5 @@ echo " "
 cd /root/Tools
 git clone https://salsa.debian.org/pkg-security-team/dirb.git
 cd dirb
-./configure
+bash ./configure
 make
