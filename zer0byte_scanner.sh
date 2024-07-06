@@ -2,7 +2,8 @@
 
 # ASCII Art Banner
 echo "======================================================"
-echo "                Zer0byte's Recon Script             "
+echo "                Zer0byte's Recon Script               "
+echo "                         v4                          "
 echo "======================================================"
 echo ""
 
@@ -74,9 +75,7 @@ start_nmap_scans() {
 
 # Function to start EyeWitness scans
 start_eyewitness_scans() {
-  for target in $targets; do
-    start_screen_session "eyewitness_$target" "python3 /root/Tools/EyeWitness/Python/EyeWitness.py --web -d results/eyewitness --prepend-https --no-prompt -f <(echo $target)"
-  done
+  start_screen_session "eyewitness_scan" "python3 /root/Tools/EyeWitness/Python/EyeWitness.py --web -d results/eyewitness --prepend-https --no-prompt -f $target_file"
 }
 
 # Menu
