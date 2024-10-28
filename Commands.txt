@@ -138,7 +138,7 @@ Write-Output "Computer names have been saved line-by-line in computers_list.txt"
 
 
 
----------------------------------------------------------------------------------
+THis WORKED! - Oct -28-2024 ---------------------------------------------------------------------------------
 
 # Run the command and capture the output
 $computers = net group "domain computers" /domain
@@ -169,4 +169,58 @@ foreach ($line in $computers) {
 $computerNames | Out-File -FilePath "computers_list.txt"
 
 Write-Output "Computer names have been saved line-by-line in computers_list.txt"
+
+
+THis WORKED! - Oct -28-2024 ---------------------------------------------------------------------------------
+
+# Specify the path to the file with the list of computers
+$computerListPath = "computers_list.txt"
+
+# Check if the file exists
+if (-Not (Test-Path -Path $computerListPath)) {
+    Write-Output "Computer list file not found at $computerListPath"
+    exit
+}
+
+# Output file for network shares
+$outputFile = "network_shares.txt"
+$unreachableFile = "unreachable_computers.txt"
+
+# Clear previous results, if any
+Clear-Content -Path $outputFile -ErrorAction SilentlyContinue
+Clear-Content -Path $unreachableFile -ErrorAction SilentlyContinue
+
+# Loop through each computer in the list
+foreach ($computer in Get-Content -Path $computerListPath) {
+    Write-Output "Checking $computer..."
+
+    # Test if the computer is reachable
+    if (Test-Connection -ComputerName $computer -Count 1 -Quiet) {
+        Write-Output "Enumerating shares on $computer..."
+
+        # Enumerate shares using Get-WmiObject
+        try {
+            $shares = Get-WmiObject -Class Win32_Share -ComputerName $computer -ErrorAction Stop
+            if ($shares) {
+                # Append results to the output file
+                Add-Content -Path $outputFile -Value "Shares on $computer:"
+                foreach ($share in $shares) {
+                    Add-Content -Path $outputFile -Value "  Share Name: $($share.Name), Path: $($share.Path)"
+                }
+                Add-Content -Path $outputFile -Value "-----------------------------------"
+            } else {
+                Add-Content -Path $outputFile -Value "No shares found on $computer"
+            }
+        } catch {
+            # Log any errors (e.g., access denied) to the output file
+            Add-Content -Path $outputFile -Value "Error accessing shares on $computer: $_"
+        }
+    } else {
+        Write-Output "$computer is unreachable."
+        Add-Content -Path $unreachableFile -Value $computer
+    }
+}
+
+Write-Output "Network share enumeration completed."
+Write-Output "Results are saved in $outputFile. Unreachable computers are listed in $unreachableFile."
 
