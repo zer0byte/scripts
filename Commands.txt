@@ -136,3 +136,37 @@ $computerNames | Out-File -FilePath "computers_list.txt"
 
 Write-Output "Computer names have been saved line-by-line in computers_list.txt"
 
+
+
+---------------------------------------------------------------------------------
+
+# Run the command and capture the output
+$computers = net group "domain computers" /domain
+
+# Initialize an array to store the formatted computer names
+$computerNames = @()
+
+# Loop through each line and extract individual computer names
+$startAdding = $false
+foreach ($line in $computers) {
+    # Start adding after finding the dashed separator line
+    if ($line -match "^-+$") { 
+        $startAdding = $true
+        continue
+    }
+    # Stop adding at the footer line
+    if ($line -match "The command completed successfully.") { break }
+
+    # If we are in the computer names section, split each line by whitespace and add each name individually
+    if ($startAdding -and $line.Trim() -ne "") {
+        $line.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
+            $computerNames += $_
+        }
+    }
+}
+
+# Output the result to a file, each computer on a new line
+$computerNames | Out-File -FilePath "computers_list.txt"
+
+Write-Output "Computer names have been saved line-by-line in computers_list.txt"
+
