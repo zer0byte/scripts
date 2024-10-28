@@ -270,6 +270,20 @@ foreach ($computer in Get-Content -Path $computerListPath) {
                 Add-Content -Path $outputFile -Value $shares
                 Add-Content -Path $outputFile -Value "-----------------------------------"
             } else {
-                # If no shares are found or there's an error, log it
-                Add-Content -
+                # If no shares are found or there's an access issue, log it
+                Add-Content -Path $outputFile -Value "No shares found or access denied on $computer"
+                Add-Content -Path $outputFile -Value "-----------------------------------"
+            }
+        } catch {
+            # Log any unexpected errors
+            Add-Content -Path $outputFile -Value "Error accessing shares on $computer: $_"
+            Add-Content -Path $outputFile -Value "-----------------------------------"
+        }
+    } else {
+        Write-Output "$computer is unreachable."
+        Add-Content -Path $unreachableFile -Value $computer
+    }
+}
 
+Write-Output "Network share enumeration completed."
+Write-Output "Results are saved in $outputFile. Unreachable computers are listed in $unreachableFile."
