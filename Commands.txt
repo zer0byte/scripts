@@ -88,3 +88,16 @@ del computers.txt
 echo Network share enumeration completed.
 echo Check shares.txt for successful enumerations and unreachable.txt for errors.
 
+
+
+
+---------------------------------------------------------------------------------
+# Run the command and capture the output
+$computers = net group "domain computers" /domain
+
+# Filter only the computer names (ignoring headers and footers) and format them line-by-line
+$computers | ForEach-Object {
+    if ($_ -match "\\\\") { $_.Trim() }
+} | Out-File -FilePath "computers_list.txt"
+
+Write-Output "Computer names have been saved line-by-line in computers_list.txt"
