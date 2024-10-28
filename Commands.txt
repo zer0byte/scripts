@@ -48,3 +48,43 @@ $reader = New-Object System.IO.StreamReader($stream)
 $scriptContent = $reader.ReadToEnd()
 $reader.Close()
 Invoke-Expression $scriptContent
+
+
+
+
+
+
+@echo off
+setlocal
+
+:: Get the list of domain computers and save it to a file
+net group "domain computers" /domain > computers_raw.txt
+
+:: Filter only computer names and save to another file (ignoring headers/footers)
+findstr /R /C:"\\\\" computers_raw.txt > computers.txt
+del computers_raw.txt
+
+:: Create or clear output files
+echo Network share enumeration results: > shares.txt
+echo Unreachable computers: > unreachable.txt
+
+:: Loop through each computer name and check its online status before enumerating
+for /f "tokens=1 delims=" %%A in (computers.txt) do (
+    echo Checking %%A ...
+    
+    :: Ping to check if the computer is online
+    ping -n 1 %%A | find "TTL=" >nul
+    if %errorlevel% equ 0 (
+        echo Enumerating shares on %%A ...
+        net view %%A >> shares.txt 2>&1
+    ) else (
+        echo %%A is unreachable. >> unreachable.txt
+    )
+)
+
+:: Clean up temporary file
+del computers.txt
+
+echo Network share enumeration completed.
+echo Check shares.txt for successful enumerations and unreachable.txt for errors.
+
