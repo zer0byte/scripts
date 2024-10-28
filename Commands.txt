@@ -224,3 +224,52 @@ foreach ($computer in Get-Content -Path $computerListPath) {
 Write-Output "Network share enumeration completed."
 Write-Output "Results are saved in $outputFile. Unreachable computers are listed in $unreachableFile."
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Path to the file with the list of computers
+$computerListPath = "computers_list.txt"
+
+# Check if the file exists
+if (-Not (Test-Path -Path $computerListPath)) {
+    Write-Output "Computer list file not found at $computerListPath"
+    exit
+}
+
+# Output file for network shares
+$outputFile = "network_shares.txt"
+$unreachableFile = "unreachable_computers.txt"
+
+# Clear previous results, if any
+Clear-Content -Path $outputFile -ErrorAction SilentlyContinue
+Clear-Content -Path $unreachableFile -ErrorAction SilentlyContinue
+
+# Loop through each computer in the list
+foreach ($computer in Get-Content -Path $computerListPath) {
+    Write-Output "Checking $computer..."
+
+    # Test if the computer is reachable
+    if (Test-Connection -ComputerName $computer -Count 1 -Quiet) {
+        Write-Output "Enumerating shares on $computer..."
+
+        # Run net view command and capture the output
+        try {
+            $shares = net view \\$computer 2>&1
+            if ($shares -match "shared resources") {
+                Add-Content -Path $outputFile -Value "Shares on $computer:"
+                Add-Content -Path $outputFile -Value $shares
+                Add-Content -Path $outputFile -Value "-----------------------------------"
+            } else {
+                # If no shares are found or there's an error, log it
+                Add-Content -
+
