@@ -101,3 +101,38 @@ $computers | ForEach-Object {
 } | Out-File -FilePath "computers_list.txt"
 
 Write-Output "Computer names have been saved line-by-line in computers_list.txt"
+
+
+
+
+
+---------------------------------------------------------------------------------
+
+# Run the command and capture the output
+$computers = net group "domain computers" /domain
+
+# Initialize an array to store the filtered computer names
+$computerNames = @()
+
+# Loop through each line and check if it contains a computer name
+$startAdding = $false
+foreach ($line in $computers) {
+    # Skip the header until we find actual computer entries
+    if ($line -match "^-+$") { 
+        $startAdding = $true
+        continue
+    }
+    # Stop adding when we hit the footer
+    if ($line -match "The command completed successfully.") { break }
+
+    # If we are in the section with computer names, add them to the array
+    if ($startAdding -and $line.Trim() -ne "") {
+        $computerNames += $line.Trim()
+    }
+}
+
+# Output the result to a file, each computer on a new line
+$computerNames | Out-File -FilePath "computers_list.txt"
+
+Write-Output "Computer names have been saved line-by-line in computers_list.txt"
+
