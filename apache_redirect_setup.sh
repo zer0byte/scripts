@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# sudo bash apache_redirect_setup.sh
+# apache_redirect_setup.sh
 set -euo pipefail
 
 # Apache setup script (Ubuntu/Debian)
@@ -126,7 +126,7 @@ ${MARK_BEGIN}
     # UA-based redirect rule (managed)
     RewriteEngine On
     RewriteCond %{HTTP_USER_AGENT} ${UA_REGEX} [NC]
-    RewriteRule ^/?$ ${REDIR_TARGET} [R=302,L]
+    RewriteRule ^/?$ \${REDIR_TARGET} [R=302,L]
 ${MARK_END}
 EOF
 )
@@ -174,7 +174,7 @@ show_verification_cmds() {
   say "Verify:"
   echo "  sudo apachectl -S"
   echo "  curl -I -A \"Googlebot\" http://localhost/"
-  echo "  curl -I -A \"Zer0byte\" http://localhost/"
+  echo "  curl -I -A \"Bilal\" http://localhost/"
   echo ""
   echo "nc test (valid HTTP request):"
   echo "  printf \"GET / HTTP/1.1\\r\\nHost: localhost\\r\\nUser-Agent: Googlebot\\r\\nConnection: close\\r\\n\\r\\n\" | nc -w 2 localhost 80"
