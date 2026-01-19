@@ -2,19 +2,14 @@
 # apache_redirect_setup.sh
 set -euo pipefail
 
-# Apache setup script (Ubuntu/Debian)
-# - Detects existing Apache install; prompts for fresh reinstall
-# - Installs: apache2, certbot, python3-certbot-apache, libapache2-mod-security2
-# - Enables apache2 service
-# - Enables modules: rewrite, headers, ssl, proxy, proxy_http
-# - Applies UA-based redirect block with fixed RewriteRule ^/?$
-# - Applies security.conf edits + SecServerSignature, then restarts Apache
-# - Idempotent: re-runs replace the managed vhost block; avoids duplicate SecServerSignature
-
 TARGET_URL="${TARGET_URL:-https://www.microsoft.com/en-us}"
 VHOST_FILE="/etc/apache2/sites-available/000-default.conf"
 BACKUP_DIR="/root/apache-backups"
 STAMP="$(date +%Y%m%d_%H%M%S)"
+
+# Set to 1 to suppress ServerName warning automatically
+SET_SERVERNAME="${SET_SERVERNAME:-1}"
+SERVERNAME_VALUE="${SERVERNAME_VALUE:-localhost}"
 
 MARK_BEGIN="# BEGIN UA_REDIRECT_BLOCK (managed)"
 MARK_END="# END UA_REDIRECT_BLOCK (managed)"
@@ -99,9 +94,7 @@ install_packages() {
   systemctl start apache2 >/dev/null 2>&1 || true
 }
 
-enable_modules() {
-  # Rewrite is required for RewriteCond/RewriteRule.
-  # Headers is commonly used for hardening. Others are optional but harmless.
+enable_modules_and_confs() {
   say "Enabling Apache modules..."
   a2enmod rewrite >/dev/null
   a2enmod headers >/dev/null
@@ -109,13 +102,32 @@ enable_modules() {
   a2enmod proxy >/dev/null || true
   a2enmod proxy_http >/dev/null || true
   a2enmod security2 >/dev/null || true
+  a2enmod unique_id >/dev/null || true
+
+  # Ensure the security.conf include is enabled (Ubuntu usually enables it by default)
+  a2enconf security >/dev/null || true
+}
+
+ensure_servername_conf() {
+  [[ "$SET_SERVERNAME" != "1" ]] && return 0
+
+  local conf="/etc/apache2/conf-available/servername.conf"
+  if [[ ! -f "$conf" ]]; then
+    echo "ServerName ${SERVERNAME_VALUE}" > "$conf"
+  else
+    # Ensure it contains a ServerName line
+    if ! grep -qE '^\s*ServerName\s+' "$conf"; then
+      echo "ServerName ${SERVERNAME_VALUE}" >> "$conf"
+    fi
+  fi
+  a2enconf servername >/dev/null || true
 }
 
 write_vhost_block() {
   [[ -f "$VHOST_FILE" ]] || die "Vhost file not found: $VHOST_FILE"
   backup_file "$VHOST_FILE"
 
-  # Write the target URL directly to avoid Bash/Apache variable expansion issues
+  # Write URL directly (avoid any Bash/Apache variable expansion issues)
   local block
   block=$(cat <<EOF
 ${MARK_BEGIN}
@@ -137,6 +149,9 @@ EOF
     perl -0777 -i -pe "s@</VirtualHost>@$block\n\n</VirtualHost>@s" "$VHOST_FILE"
     say "Inserted managed vhost block into $VHOST_FILE"
   fi
+
+  # Self-heal: ensure RewriteRule line is correct inside managed block (protect against accidental corruption)
+  sed -i -E "s|^(\\s*RewriteRule\\s+).*\\[R=302,L\\]\\s*$|\\1^/?$ ${TARGET_URL} [R=302,L]|" "$VHOST_FILE"
 }
 
 apply_security_conf_changes() {
@@ -144,10 +159,9 @@ apply_security_conf_changes() {
   [[ -f "$sec" ]] || die "Not found: $sec"
   backup_file "$sec"
 
-  # Apply the two sed substitutions requested (only if those exact strings exist)
-  # Then ensure SecServerSignature exists exactly once.
   say "Updating Apache security.conf (ServerSignature/ServerTokens + SecServerSignature)..."
 
+  # These substitutions mirror your one-liner intent
   sed -i \
     -e 's/ServerSignature On/ServerSignature Off/g' \
     -e 's/ServerTokens OS/ServerTokens Full/g' \
@@ -197,7 +211,8 @@ main() {
     install_packages
   fi
 
-  enable_modules
+  enable_modules_and_confs
+  ensure_servername_conf
   write_vhost_block
   apply_security_conf_changes
   configtest_and_restart
