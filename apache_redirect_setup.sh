@@ -115,8 +115,7 @@ write_vhost_block() {
   [[ -f "$VHOST_FILE" ]] || die "Vhost file not found: $VHOST_FILE"
   backup_file "$VHOST_FILE"
 
-  # Managed block with the fixed RewriteRule pattern ^/?$
-  # NOTE: RewriteCond must remain a single line.
+  # Write the target URL directly to avoid Bash/Apache variable expansion issues
   local block
   block=$(cat <<EOF
 ${MARK_BEGIN}
@@ -126,7 +125,7 @@ ${MARK_BEGIN}
     # UA-based redirect rule (managed)
     RewriteEngine On
     RewriteCond %{HTTP_USER_AGENT} ${UA_REGEX} [NC]
-    RewriteRule ^/?$ \${REDIR_TARGET} [R=302,L]
+    RewriteRule ^/?$ ${TARGET_URL} [R=302,L]
 ${MARK_END}
 EOF
 )
